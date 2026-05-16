@@ -33,6 +33,11 @@ cd aws/backend
 sam build
 sam deploy --guided
 ```
+If you are on Windows PowerShell and `npm install` is blocked by execution policy, use `npm.cmd` instead.
+You can also run the helper script from the repo root:
+```powershell
+pwsh .\aws\deploy.ps1
+```
 During guided deploy, choose:
 - Stack name: `claims-agent-hackathon`
 - Region: your region

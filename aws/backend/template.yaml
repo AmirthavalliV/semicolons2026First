@@ -84,7 +84,7 @@ Resources:
   ClaimsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
+      CodeUri: .
       Handler: handlers/router.handler
       Policies:
         - DynamoDBCrudPolicy:

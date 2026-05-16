@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "sam build",
+    "deploy": "sam deploy --guided",
     "seed:policies": "node scripts/seedPolicies.js"
   },
   "dependencies": {
