@@ -1,0 +1,27 @@
+<template>
+  <lightning-card title="File a Claim (Chat)">
+    <div class="slds-p-around_medium">
+      <template for:each={messages} for:item="message">
+        <p key={message.id} class={message.cssClass}>
+          <strong>{message.role}:</strong> {message.text}
+        </p>
+      </template>
+
+      <lightning-textarea
+        label="Your message"
+        value={userMessage}
+        onchange={handleMessageChange}
+        placeholder="Describe your claim in plain language"
+      ></lightning-textarea>
+
+      <div class="slds-m-top_small">
+        <lightning-button
+          variant="brand"
+          label="Send"
+          onclick={handleSend}
+          disabled={isSending}
+        ></lightning-button>
+      </div>
+    </div>
+  </lightning-card>
+</template>

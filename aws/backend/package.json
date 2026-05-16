@@ -1,0 +1,17 @@
+{
+  "name": "claims-agent-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed:policies": "node scripts/seedPolicies.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.649.0",
+    "@aws-sdk/lib-dynamodb": "^3.649.0",
+    "@aws-sdk/client-s3": "^3.649.0",
+    "@aws-sdk/s3-request-presigner": "^3.649.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.651.0",
+    "uuid": "^9.0.1"
+  }
+}

@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Claims Agent Hackathon - Serverless backend (API Gateway + Lambda + DynamoDB + S3)
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 15
+    MemorySize: 512
+    Environment:
+      Variables:
+        CLAIMS_TABLE: !Ref ClaimsTable
+        POLICIES_TABLE: !Ref PoliciesTable
+        DOCS_BUCKET: !Ref DocsBucket
+        AI_PROVIDER: "rules"   # set to 'bedrock' to enable Bedrock integration
+        BEDROCK_MODEL_ID: ""   # optional
+
+Resources:
+  ClaimsApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'content-type'"
+        AllowOrigin: "'*'"
+
+  ClaimsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: claimId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: claimId
+          KeyType: HASH
+
+  PoliciesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: policyNumber
+          AttributeType: S
+      KeySchema:
+        - AttributeName: policyNumber
+          KeyType: HASH
+
+  DocsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST]
+            AllowedOrigins: ['*']
+
+  WebBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  WebBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${WebBucket.Arn}/*'
+
+  ClaimsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handlers/router.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ClaimsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PoliciesTable
+        - S3CrudPolicy:
+            BucketName: !Ref DocsBucket
+      Events:
+        Start:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClaimsApi
+            Path: /start
+            Method: post
+        Chat:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClaimsApi
+            Path: /chat
+            Method: post
+        GetClaim:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClaimsApi
+            Path: /claim/{claimId}
+            Method: get
+        Upload:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClaimsApi
+            Path: /upload
+            Method: post
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint
+    Value: !Sub 'https://${ClaimsApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
+  WebBucketName:
+    Description: S3 bucket for hosting frontend
+    Value: !Ref WebBucket
+  DocsBucketName:
+    Description: S3 bucket for uploaded claim documents
+    Value: !Ref DocsBucket
